@@ -36,6 +36,10 @@ var stage = {
         'vus': 1000,
         'request_count': 10000
     },
+    '8': {
+        'vus': 10000,
+        'request_count': 20000
+    }
 }
 
 export {

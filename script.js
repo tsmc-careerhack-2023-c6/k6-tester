@@ -28,13 +28,18 @@ const order = (location, timestamp) => {
 }
 
 const record = (location, timestamp) => {
-    const res = http.get(`http://${server.host}:${server.port}/api/record?location=${location}\&date=2023-01-23`);
-
+    const res = http.get(`http://${server.host}:${server.port}/api/record?location=${location}\&date=${timestamp.slice(0, 10)}`);
+    // console.log(res.json())
     return res;
 }
 
 const report = (location, timestamp) => {
-    const res = http.get(`http://${server.host}:${server.port}/api/report?location=${location}\&date=2023-01-23`);
+    const res = http.post(`http://${server.host}:${server.port}/api/report?location=${location}\&date=${timestamp.slice(0, 10)}`);
+    const res_json = res.json()
+
+    check(res_json, {
+        'count is correct': (r) => r.count === stage[__ENV.STAGE].request_count,
+    });
 
     return res;
 }
@@ -45,22 +50,23 @@ export const options = {
             executor: 'shared-iterations',
             vus: stage[__ENV.STAGE].vus, // number of threads
             iterations: stage[__ENV.STAGE].request_count,
-            maxDuration: '20s',
+            maxDuration: '1m',
             env: {"EXE": "ORDER"}
         },
-        record: {
-            executor: 'shared-iterations',
-            vus: stage[__ENV.STAGE].vus, // number of threads
-            iterations: stage[__ENV.STAGE].request_count,
-            maxDuration: '20s',
-            env: {"EXE": "REPORT"}
-        },
+        // record: {
+        //    executor: 'shared-iterations',
+        //    vus: 1,
+        //    iterations: 1,
+        //    maxDuration: '20s',
+        //    env: {"EXE": "RECORD"}
+        // },
         report: {
-            executor: 'shared-iterations',
-            vus: stage[__ENV.STAGE].vus, // number of threads
-            iterations: stage[__ENV.STAGE].request_count,
-            maxDuration: '20s',
-            env: {"EXE": "RECORD"}
+           executor: 'shared-iterations',
+           vus: 1,
+           iterations: 1,
+           startTime: '1m',
+           maxDuration: '20s',
+           env: {"EXE": "REPORT"}
         },
         // crazy: {
         //     executor: 'shared-iterations',
@@ -97,7 +103,7 @@ for (let key in options.scenarios) {
 
 export default function () {
 
-    const location = 'l' + getRandomIntInclusive(1, 5);
+    const location = 'L1';
     const timestamp = new Date().toISOString();
 
     const res = MAP[__ENV['EXE']](location, timestamp)
